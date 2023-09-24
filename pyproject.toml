@@ -18,6 +18,8 @@ transformers = "^4.33.2"
 sentencepiece = "^0.1.99"
 einops = "^0.6.1"
 accelerate = "^0.23.0"
+langchain = "^0.0.300"
+pypdfium2 = "^4.20.0"
 
 [[tool.poetry.source]]
 name = "torch-cpu"
