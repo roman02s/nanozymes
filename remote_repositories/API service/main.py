@@ -4,6 +4,7 @@ from pydantic import BaseModel
 import uvicorn
 
 from src.find_simulary import find_simulary
+from src.chat import ChatGPT
 
 
 app = FastAPI()
@@ -34,16 +35,15 @@ async def handler_nanozymes_bot(request: NanozymesBotRequest):
         # document = "C4RA15675G.pdf"
         print("My document: ", document)
         # query_text = "query:  Fe3O4 NPs"
-        result = find_simulary(document, request.query_text)
-        print("type(result): ", type(result[0][0]))
-        print(str(result[0]))
-        data_to_send = {
-            "query_text": request.query_text,
-            "context": request.context
-        }
+        get_context_for_query = find_simulary(document, request.query_text)
+        llm = ChatGPT()
+        llm_response = llm(
+            query=request.query_text,
+            previous_questions=request.context,
+            context=get_context_for_query[0])
         new_context = request.context + "\n\n" + request.query_text
-        return {"answer": str(result[0]), "context": new_context}
-    except BaseException as e:
+        return {"answer": llm_response, "context": new_context}
+    except ValueError as e:
         return {"answer": "Error,"+ str(document) + str(e), "context": request.context}
 
 @app.post("/find_simulary", response_model=FindSimilaryResponse)
