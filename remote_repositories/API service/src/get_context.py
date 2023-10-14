@@ -3,8 +3,8 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 
-from .pdf2text import build_index
-from .embedder_e5 import (
+from .pdf2text import PDF2text
+from src.embedder_e5 import (
     e5_get_embeddings,
     average_pool,
     model,
@@ -39,11 +39,8 @@ def get_context(document: str, query_text: str):
   'NPs with near corner-grown cubic, near cubic and polyhedron shape can be successfully prepared by']]
 
     """
-    fixed_documents = build_index(
-        file_paths=[path_data + "/" + document],
-        chunk_size=200,
-        chunk_overlap=10
-    )
+    pdf2text = PDF2text([path_data + "/" + document])
+    fixed_documents = pdf2text.build_index()
     all_texts = [item.page_content for item in fixed_documents]
     texts = all_texts[:20].copy()
     print(len(texts), len(all_texts), "all texts and 20 first")
@@ -77,9 +74,9 @@ def get_context(document: str, query_text: str):
     size = combined_tensor.shape[0] #размер индекса
 
     index = faiss.IndexFlatL2(dim)
-    print(index.ntotal)  # пока индекс пустой
+    # print(index.ntotal)  # пока индекс пустой
     index.add(combined_tensor.cpu().detach().numpy())
-    print(index.ntotal)  # теперь в нем sentence_embeddings.shape[0] векторов
+    # print(index.ntotal)  # теперь в нем sentence_embeddings.shape[0] векторов
 
 
     def get_query_embedding(query_text): # query_text = "query: Какие основания для получения 33 услуги?"
