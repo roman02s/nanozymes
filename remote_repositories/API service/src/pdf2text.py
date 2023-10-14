@@ -1,6 +1,5 @@
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-
 from langchain.document_loaders import (
     CSVLoader,
     EverNoteLoader,
@@ -14,24 +13,6 @@ from langchain.document_loaders import (
     UnstructuredPowerPointLoader,
     UnstructuredWordDocumentLoader,
 )
-print("SUCCESS IN PDF2TEXT")
-
-
-LOADER_MAPPING = {
-    ".csv": (CSVLoader, {}),
-    ".doc": (UnstructuredWordDocumentLoader, {}),
-    ".docx": (UnstructuredWordDocumentLoader, {}),
-    ".enex": (EverNoteLoader, {}),
-    ".epub": (UnstructuredEPubLoader, {}),
-    ".html": (UnstructuredHTMLLoader, {}),
-    ".md": (UnstructuredMarkdownLoader, {}),
-    ".odt": (UnstructuredODTLoader, {}),
-    ".pdf": (PDFMinerLoader, {}),
-    ".ppt": (UnstructuredPowerPointLoader, {}),
-    ".pptx": (UnstructuredPowerPointLoader, {}),
-    ".txt": (TextLoader, {"encoding": "utf8"}),
-}
-
 
 def process_text(text):
     lines = text.split("\n")
@@ -42,42 +23,54 @@ def process_text(text):
     return text
 
 
-def load_single_document(file_path: str) -> Document:
-    ext = "." + file_path.rsplit(".", 1)[-1]
-    assert ext in LOADER_MAPPING
-    loader_class, loader_args = LOADER_MAPPING[ext]
-    loader = loader_class(file_path, **loader_args)
-    return loader.load()[0]
+class PDF2text:
+    LOADER_MAPPING = {
+        ".csv": (CSVLoader, {}),
+        ".doc": (UnstructuredWordDocumentLoader, {}),
+        ".docx": (UnstructuredWordDocumentLoader, {}),
+        ".enex": (EverNoteLoader, {}),
+        ".epub": (UnstructuredEPubLoader, {}),
+        ".html": (UnstructuredHTMLLoader, {}),
+        ".md": (UnstructuredMarkdownLoader, {}),
+        ".odt": (UnstructuredODTLoader, {}),
+        ".pdf": (PDFMinerLoader, {}),
+        ".ppt": (UnstructuredPowerPointLoader, {}),
+        ".pptx": (UnstructuredPowerPointLoader, {}),
+        ".txt": (TextLoader, {"encoding": "utf8"}),
+    }
+    def __init__(self, file_paths, chunk_size=200, chunk_overlap=10):
+        self.file_paths = file_paths
+        self.chunk_size = chunk_size
+        self.chunk_overlap = chunk_overlap
 
-def build_index(file_paths, chunk_size, chunk_overlap):
-    documents = [load_single_document(path) for path in file_paths]
-    print(documents)
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
-    documents = text_splitter.split_documents(documents)
-    print(documents)
-    fixed_documents = []
-    for doc in documents:
-        doc.page_content = process_text(doc.page_content)
-        if not doc.page_content:
-            continue
-        fixed_documents.append(doc)
+    def __load_single_document(self, file_path: str) -> Document:
+        ext = "." + file_path.rsplit(".", 1)[-1]
+        assert ext in self.LOADER_MAPPING
+        loader_class, loader_args = self.LOADER_MAPPING[ext]
+        loader = loader_class(file_path, **loader_args)
+        return loader.load()[0]
 
-    print(f"Загружено {len(fixed_documents)} фрагментов! Можно задавать вопросы.")
-    return fixed_documents
+    def build_index(self):
+        documents = [self.__load_single_document(path) for path in self.file_paths]
+        # print(documents)
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=self.chunk_size, chunk_overlap=self.chunk_overlap)
+        documents = text_splitter.split_documents(documents)
+        # print(documents)
+        self.fixed_documents = []
+        for doc in documents:
+            doc.page_content = process_text(doc.page_content)
+            if not doc.page_content:
+                continue
+            self.fixed_documents.append(doc)
 
+        print(f"Загружено {len(self.fixed_documents)} фрагментов! Можно задавать вопросы.")
+        return self.fixed_documents
 
+# Пример использования PDF2text
 if __name__ == "__main__":
-    import time
-    start = time.time()
-    print("Start static test")
-    print("Import and prepare data/C4RA15675G.pdf for get text")
-    fixed_documents = build_index(
-        file_paths=["data/C4RA15675G.pdf"],
-        chunk_size=200,
-        chunk_overlap=10
-    )
-    print(len(fixed_documents), "documents")
-    print("End static test")
-    print(time.time() - start)
+    file_paths = ["data/C4RA15675G.pdf"]
+    chunk_size = 200
+    chunk_overlap = 10
 
-print("~SUCCESS IN PDF2TEXT")
+    pdf2text = PDF2text(file_paths, chunk_size, chunk_overlap)
+    fixed_documents = pdf2text.build_index()
