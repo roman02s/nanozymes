@@ -5,68 +5,66 @@ import uvicorn
 
 from src.find_simulary import find_simulary
 
-document = "C4RA15675G.pdf"
-query_text = "query:  Fe3O4 NPs"
-result = find_simulary(document, query_text)
-print("type(result): ", type(result))
+
+app = FastAPI()
+
+class NanozymesBotRequest(BaseModel):
+    article: dict
+    query_text: str
+    context: str
+
+class NanozymesBotResponse(BaseModel):
+    answer: str
+    context: str
+
+class FindSimilaryRequest(BaseModel):
+    params: dict
+
+class FindSimilaryResponse(BaseModel):
+    articles: dict
 
 
-# app = FastAPI()
+@app.post("/nanozymes_bot", response_model=NanozymesBotResponse)
+async def handler_nanozymes_bot(request: NanozymesBotRequest):
+    try:
+        link = request.article.get("link", None)
+        if link is None:
+            return {"answer": "No link", "context": request.context}
+        document = link.split("/")[-1]
+        # document = "C4RA15675G.pdf"
+        print("My document: ", document)
+        # query_text = "query:  Fe3O4 NPs"
+        result = find_simulary(document, request.query_text)
+        print("type(result): ", type(result[0][0]))
+        print(str(result[0]))
+        data_to_send = {
+            "query_text": request.query_text,
+            "context": request.context
+        }
+        new_context = request.context + "\n\n" + request.query_text
+        return {"answer": str(result[0]), "context": new_context}
+    except BaseException as e:
+        return {"answer": "Error,"+ str(document) + str(e), "context": request.context}
 
-# class NanozymesBotRequest(BaseModel):
-#     article: dict
-#     query_text: str
-#     context: str
-
-# class NanozymesBotResponse(BaseModel):
-#     answer: str
-#     context: str
-
-# class FindSimilaryRequest(BaseModel):
-#     params: dict
-
-# class FindSimilaryResponse(BaseModel):
-#     articles: dict
-
-# @app.post("/nanozymes_bot", response_model=NanozymesBotResponse)
-# async def nanozymes_bot(request: NanozymesBotRequest):
-#     # chatgpt_url = "https://api.openai.com/v1/chatgpt/..."
-#     # headers = {"Authorization": "Bearer YOUR_ACCESS_TOKEN_HERE"}
+@app.post("/find_simulary", response_model=FindSimilaryResponse)
+async def handler_find_simulary(request: FindSimilaryRequest):
+    v_max = request.params.get("v_max")
+    K_m = request.params.get("K_m")
     
-#     # data_to_send = {
-#     #     "query_text": request.query_text,
-#     #     "context": request.context
-#     # }
+    # Здесь код для поиска статей с заданными параметрами
+    # ...
     
-#     # async with httpx.AsyncClient() as client:
-#     #     resp = await client.post(chatgpt_url, headers=headers, json=data_to_send)
+    articles = {
+        # Пример заполнения
+        "article_1": {
+            "doi_url": "...",
+            "text_with_parameters": {"K_m": 123,}
+        }
+    }
     
-#     # chatgpt_response = resp.json()
-    
-#     # answer = chatgpt_response.get("answer", "")
-#     # new_context = request.context + "\n" + request.query_text
-#     answer = ""
-#     new_context = ""
-#     return {"answer": answer, "context": new_context}
-
-# @app.post("/find_similary", response_model=FindSimilaryResponse)
-# async def find_similary(request: FindSimilaryRequest):
-#     v_max = request.params.get("v_max")
-#     K_m = request.params.get("K_m")
-    
-#     # Здесь код для поиска статей с заданными параметрами
-#     # ...
-    
-#     articles = {
-#         # Пример заполнения
-#         "article_1": {
-#             "doi_url": "...",
-#             "text_with_parameters": {"K_m": 123,}
-#         }
-#     }
-    
-#     return {"articles": articles}
+    return {"articles": articles}
 
 
-# if __name__ == "__main__":
-#     uvicorn.run("main:app", host="localhost", port=8000, reload=True)
+if __name__ == "__main__":
+    print("RUN SERVER")
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
