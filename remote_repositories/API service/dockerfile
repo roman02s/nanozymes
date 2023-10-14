@@ -27,8 +27,8 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 # Копируйте все остальные файлы приложения
 COPY . /app
-
+EXPOSE 8000
 # Запустите ваше приложение
 # CMD ["python", "your_app.py"]
 # docker build -t api-service .
-# docker run -it --rm -v "$(pwd):/app" api-service bash
+# docker run -it --rm -v "$(pwd):/app" -p 8000:8000 api-service bash

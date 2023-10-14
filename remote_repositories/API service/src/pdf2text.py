@@ -1,3 +1,6 @@
+import os
+
+
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.document_loaders import (
@@ -45,7 +48,14 @@ class PDF2text:
 
     def __load_single_document(self, file_path: str) -> Document:
         ext = "." + file_path.rsplit(".", 1)[-1]
-        assert ext in self.LOADER_MAPPING
+        if ext not in self.LOADER_MAPPING:
+            for ext in self.LOADER_MAPPING:
+                print(file_path + ext)
+                if os.path.exists(file_path + ext):
+                    file_path += ext
+                    break
+            else:
+                raise ValueError(f"Unsupported file extension: {ext}")
         loader_class, loader_args = self.LOADER_MAPPING[ext]
         loader = loader_class(file_path, **loader_args)
         return loader.load()[0]
