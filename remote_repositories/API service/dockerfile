@@ -1,34 +1,38 @@
-# Используйте официальный образ Python 3.10-slim
 FROM python:3.10-slim
 
-# Обновите системные пакеты и установите зависимости
+# Обновление системных пакетов и установка зависимостей
 RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
+# Указание используемого порта и рабочей директории
+EXPOSE 8000
 WORKDIR /app
 # POETRY PART
 # ==================================================
-# # Установите Poetry
+# # Установка Poetry
 # RUN pip install poetry
 # RUN curl -sSL https://install.python-poetry.org | python3 -
 
 # # Убедитесь, что Poetry включен в переменную PATH
 # ENV PATH="${PATH}:/root/.poetry/bin"
 
-# # Установите зависимости с помощью Poetry
+# # Установка зависимостей с помощью Poetry
 
 # COPY pyproject.toml poetry.lock /app/
 # RUN ls -lah .
 # RUN poetry -v 
 # RUN poetry config virtualenvs.create false && poetry install --no-dev
 # ==================================================
+
+# Установка зависимостей python
 COPY requirements.txt .
-RUN pip install -r requirements.txt
-# Копируйте все остальные файлы приложения
+RUN pip install -r requirements.txt && \
+    python -m spacy download en_core_web_sm
+
 COPY . /app
-EXPOSE 8000
-# Запустите ваше приложение
-# CMD ["python", "your_app.py"]
+
+# Запуск приложения
+# CMD ["python", "main.py"]
 # docker build -t api-service .
 # docker run -it --rm -v "$(pwd):/app" -p 8000:8000 api-service bash
