@@ -5,6 +5,8 @@ import uvicorn
 
 from src.find_simulary import find_simulary
 from src.chat import ChatGPT
+from src.find_params import SubstanceSizeExtractor
+from src.pdf2text import PDF2text
 
 
 app = FastAPI()
@@ -18,11 +20,11 @@ class NanozymesBotResponse(BaseModel):
     answer: str
     context: str
 
-class FindSimilaryRequest(BaseModel):
-    params: dict
+class FindParametersRequest(BaseModel):
+    article: dict
 
-class FindSimilaryResponse(BaseModel):
-    articles: dict
+class FindParametersResponse(BaseModel):
+    params: dict
 
 
 @app.post("/nanozymes_bot", response_model=NanozymesBotResponse)
@@ -41,28 +43,35 @@ async def handler_nanozymes_bot(request: NanozymesBotRequest):
             query=request.query_text,
             previous_questions=request.context,
             context=get_context_for_query[0])
-        new_context = request.context + "\n\n" + request.query_text
+        new_context = request.context + "\n\n" + request.query_text + llm_response + "\n\n"
         return {"answer": llm_response, "context": new_context}
     except ValueError as e:
         return {"answer": "Error,"+ str(document) + str(e), "context": request.context}
 
-@app.post("/find_simulary", response_model=FindSimilaryResponse)
-async def handler_find_simulary(request: FindSimilaryRequest):
-    v_max = request.params.get("v_max")
-    K_m = request.params.get("K_m")
+@app.post("/find_parameters", response_model=FindParametersResponse)
+async def handler_find_simulary(request: FindParametersRequest):
+    link = request.article.get("v_max")
+    if link is None:
+        return {"params": {}}
+    document = link.split("/")[-1]
     
-    # Здесь код для поиска статей с заданными параметрами
-    # ...
+    extractor = SubstanceSizeExtractor()
+    text_document = PDF2text(["data" + "/" + document]).build_index()
+    print(text_document)
+    for example in text_document:
+        sizes = extractor.extract_sizes(example)
+        if sizes:
+            print(f"Substance sizes in '{example}': {', '.join(sizes)}")
+
+    # articles = {
+    #     # Пример заполнения
+    #     "article_1": {
+    #         "doi_url": "...",
+    #         "text_with_parameters": {"K_m": 123,}
+    #     }
+    # }
     
-    articles = {
-        # Пример заполнения
-        "article_1": {
-            "doi_url": "...",
-            "text_with_parameters": {"K_m": 123,}
-        }
-    }
-    
-    return {"articles": articles}
+    return {"params": {}}
 
 
 if __name__ == "__main__":
