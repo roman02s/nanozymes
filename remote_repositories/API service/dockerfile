@@ -35,4 +35,4 @@ COPY . /app
 # Запуск приложения
 # CMD ["python", "main.py"]
 # docker build -t api-service .
-# docker run -it --rm -v "$(pwd):/app" -p 8000:8000 api-service bash
+# docker run -it -v "$(pwd):/app" -p 8000:8000 api-service bash

@@ -7,6 +7,7 @@ from src.find_simulary import find_simulary
 from src.chat import ChatGPT
 from src.find_params import SubstanceSizeExtractor
 from src.pdf2text import PDF2text
+from src.get_parameters import get_parameters
 
 
 app = FastAPI()
@@ -43,25 +44,31 @@ async def handler_nanozymes_bot(request: NanozymesBotRequest):
             query=request.query_text,
             previous_questions=request.context,
             context=get_context_for_query[0])
-        new_context = request.context + "\n\n" + request.query_text + llm_response + "\n\n"
+        new_context = request.context + "\n\n" + request.query_text + "\n\nresponse: " + llm_response + "\n\n"
         return {"answer": llm_response, "context": new_context}
     except ValueError as e:
         return {"answer": "Error,"+ str(document) + str(e), "context": request.context}
 
 @app.post("/find_parameters", response_model=FindParametersResponse)
 async def handler_find_simulary(request: FindParametersRequest):
-    link = request.article.get("v_max")
+    link = request.article.get("link")
     if link is None:
         return {"params": {}}
-    document = link.split("/")[-1]
     
-    extractor = SubstanceSizeExtractor()
-    text_document = PDF2text(["data" + "/" + document]).build_index()
-    print(text_document)
-    for example in text_document:
-        sizes = extractor.extract_sizes(example)
-        if sizes:
-            print(f"Substance sizes in '{example}': {', '.join(sizes)}")
+    # Из таблицы
+
+    params = get_parameters(link)
+
+    # Из PDF
+
+    # document = link.split("/")[-1]
+    # extractor = SubstanceSizeExtractor()
+    # text_document = PDF2text(["data" + "/" + document]).build_index()
+    # print(text_document)
+    # for example in text_document:
+    #     sizes = extractor.extract_sizes(example)
+    #     if sizes:
+    #         print(f"Substance sizes in '{example}': {', '.join(sizes)}")
 
     # articles = {
     #     # Пример заполнения
@@ -71,7 +78,7 @@ async def handler_find_simulary(request: FindParametersRequest):
     #     }
     # }
     
-    return {"params": {}}
+    return {"params": params}
 
 
 if __name__ == "__main__":

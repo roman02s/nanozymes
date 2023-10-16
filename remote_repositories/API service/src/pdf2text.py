@@ -28,18 +28,18 @@ def process_text(text):
 
 class PDF2text:
     LOADER_MAPPING = {
-        ".csv": (CSVLoader, {}),
-        ".doc": (UnstructuredWordDocumentLoader, {}),
-        ".docx": (UnstructuredWordDocumentLoader, {}),
-        ".enex": (EverNoteLoader, {}),
-        ".epub": (UnstructuredEPubLoader, {}),
-        ".html": (UnstructuredHTMLLoader, {}),
-        ".md": (UnstructuredMarkdownLoader, {}),
-        ".odt": (UnstructuredODTLoader, {}),
+        # ".csv": (CSVLoader, {}),
+        # ".doc": (UnstructuredWordDocumentLoader, {}),
+        # ".docx": (UnstructuredWordDocumentLoader, {}),
+        # ".enex": (EverNoteLoader, {}),
+        # ".epub": (UnstructuredEPubLoader, {}),
+        # ".html": (UnstructuredHTMLLoader, {}),
+        # ".md": (UnstructuredMarkdownLoader, {}),
+        # ".odt": (UnstructuredODTLoader, {}),
         ".pdf": (PDFMinerLoader, {}),
-        ".ppt": (UnstructuredPowerPointLoader, {}),
-        ".pptx": (UnstructuredPowerPointLoader, {}),
-        ".txt": (TextLoader, {"encoding": "utf8"}),
+        # ".ppt": (UnstructuredPowerPointLoader, {}),
+        # ".pptx": (UnstructuredPowerPointLoader, {}),
+        # ".txt": (TextLoader, {"encoding": "utf8"}),
     }
     def __init__(self, file_paths, chunk_size=200, chunk_overlap=10):
         self.file_paths = file_paths

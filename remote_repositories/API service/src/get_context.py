@@ -1,3 +1,4 @@
+import os
 import faiss
 import torch
 import torch.nn.functional as F
@@ -49,22 +50,23 @@ def get_context(document: str, query_text: str):
     import gc
 
     embds = []
-    for i, parag in tqdm(enumerate(texts), total=len(texts)):
+    if not os.path.exists(embeddings_data + "/" + f"embds_last_part_{document}.pt"):
+        for i, parag in tqdm(enumerate(texts), total=len(texts)):
 
-        torch.cuda.empty_cache()
-        gc.collect()
+            torch.cuda.empty_cache()
+            gc.collect()
 
-        embd = e5_get_embeddings(f"passage: {parag}")
-        embds.append(embd.to('cpu'))
-        del embd
+            embd = e5_get_embeddings(f"passage: {parag}")
+            embds.append(embd.to('cpu'))
+            del embd
 
-        if len(embds) == 100:
+            if len(embds) == 100:
 
-            torch.save(embds, f"embds_{i+1 - 100}_{i+1}.pt")
-            embds = []
+                torch.save(embds, f"embds_{i+1 - 100}_{i+1}.pt")
+                embds = []
 
-        if i + 1 == len(texts):
-            torch.save(embds, embeddings_data + "/" + f"embds_last_part_{document}.pt")
+            if i + 1 == len(texts):
+                torch.save(embds, embeddings_data + "/" + f"embds_last_part_{document}.pt")
 
 
     all_embds = torch.load(embeddings_data + "/" + f"embds_last_part_{document}.pt")
