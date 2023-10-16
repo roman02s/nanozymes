@@ -38,6 +38,11 @@ result:
 	},
 }
 ```
+## Запуск
+Для запуска сервиса выполните следующие команды:
+1) `docker build -t api-service .`
+2) `docker run -it -v "$(pwd):/app" -p 8000:8000 api-service bash`
+
 P.S.: `pyproject.toml` не использовать!
 
 ## Команда
