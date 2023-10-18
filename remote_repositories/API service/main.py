@@ -1,3 +1,6 @@
+from typing import List, Dict, Optional
+from copy import deepcopy
+
 from fastapi import FastAPI
 from pydantic import BaseModel
 
@@ -22,10 +25,11 @@ class NanozymesBotResponse(BaseModel):
     context: str
 
 class FindParametersRequest(BaseModel):
-    article: dict
+    k_m: str
+    v_max: str
 
 class FindParametersResponse(BaseModel):
-    params: dict
+    articles: dict
 
 
 @app.post("/nanozymes_bot", response_model=NanozymesBotResponse)
@@ -51,34 +55,22 @@ async def handler_nanozymes_bot(request: NanozymesBotRequest):
 
 @app.post("/find_parameters", response_model=FindParametersResponse)
 async def handler_find_simulary(request: FindParametersRequest):
-    link = request.article.get("link")
-    if link is None:
-        return {"params": {}}
+    k_m = request.k_m
+    v_max = request.v_max
+    if k_m is None and v_max is None:
+        return {"articles": {}}
     
-    # Из таблицы
 
-    params = get_parameters(link)
+    articles: List[Dict[str, str]] = get_parameters(k_m, v_max)
 
-    # Из PDF
-
-    # document = link.split("/")[-1]
-    # extractor = SubstanceSizeExtractor()
-    # text_document = PDF2text(["data" + "/" + document]).build_index()
-    # print(text_document)
-    # for example in text_document:
-    #     sizes = extractor.extract_sizes(example)
-    #     if sizes:
-    #         print(f"Substance sizes in '{example}': {', '.join(sizes)}")
-
-    # articles = {
-    #     # Пример заполнения
-    #     "article_1": {
-    #         "doi_url": "...",
-    #         "text_with_parameters": {"K_m": 123,}
-    #     }
-    # }
+    result = {}
+    for id, article in enumerate(articles, start=1):
+        result[f"article_{id}"] = {
+            "distance": article["distance"],
+            "text_with_parameters": str(article.items()),
+        }
     
-    return {"params": params}
+    return {"articles": result}
 
 
 if __name__ == "__main__":
