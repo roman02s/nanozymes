@@ -109,21 +109,16 @@ def get_context(document: str, query_text: str):
     result_sem = sem_search_faiss(
         query_text=query_text,
         index=index,
-        top_k=5
+        top_k=2
     )
     # [[  1 217  35   7 147]]
     result_set = set()
     for i in range(len(result_sem[1][0])):
         _index = result_sem[1][0][i]
-        if _index == 0:
-            _index += 1
-        elif _index == len(all_texts)-1:
-            _index -= 1
-        
-        result_set.add(_index+1)
-    
-        result_set.add(_index-1)
-        result_set.add(_index)
+        bias = 10
+        for j in range(_index - bias, _index + bias):
+            if j >= 0 and j < len(all_texts)-1:
+                result_set.add(j)
 
     result = np.array(list(result_set))
     result = np.sort(result)

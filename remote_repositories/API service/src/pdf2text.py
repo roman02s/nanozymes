@@ -58,7 +58,7 @@ class PDF2text:
         # ".pptx": (UnstructuredPowerPointLoader, {}),
         # ".txt": (TextLoader, {"encoding": "utf8"}),
     }
-    def __init__(self, file_paths, chunk_size=1200, chunk_overlap=0):
+    def __init__(self, file_paths, chunk_size=100, chunk_overlap=0):
         self.file_paths = file_paths
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
