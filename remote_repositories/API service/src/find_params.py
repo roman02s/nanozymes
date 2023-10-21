@@ -1,6 +1,21 @@
 import spacy
 from spacy.matcher import Matcher
 
+import logging
+logger = logging.getLogger('nanozymes_bot')
+logger.setLevel(logging.INFO)
+
+# Создаем обработчик для записи логов в файл
+file_handler = logging.FileHandler('logs/nanozymes_bot.log')
+file_handler.setLevel(logging.INFO)
+
+# Создаем форматтер для записи логов в удобочитаемом формате
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+
+# Добавляем обработчик к логгеру
+logger.addHandler(file_handler)
+
 
 class SubstanceSizeExtractor:
     def __init__(self):
@@ -37,4 +52,4 @@ if __name__ == "__main__":
     for example in text_examples:
         sizes = extractor.extract_sizes(example)
         if sizes:
-            print(f"Substance sizes in '{example}': {', '.join(sizes)}")
+            logger.info(f"Substance sizes in '{example}': {', '.join(sizes)}")

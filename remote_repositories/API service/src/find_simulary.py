@@ -1,16 +1,28 @@
 from src.get_context import get_context
 
-# document = "C4RA15675G.pdf"
-# query_text = "query:  Fe3O4 NPs"
-# result = get_context(document, query_text)
-# print("type(result): ", type(result))
-print("SUCCESS IN FIND SIMULARY")
+# import logging
+# logger = logging.getLogger('nanozymes_bot')
+# logger.setLevel(logging.INFO)
+
+# # Создаем обработчик для записи логов в файл
+# file_handler = logging.FileHandler('logs/nanozymes_bot.log')
+# file_handler.setLevel(logging.INFO)
+
+# # Создаем форматтер для записи логов в удобочитаемом формате
+# formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# file_handler.setFormatter(formatter)
+
+# # Добавляем обработчик к логгеру
+# logger.addHandler(file_handler)
+
+
+# logger.info("SUCCESS IN FIND SIMULARY")
 
 def find_simulary(document, query_text):
-    print("RUN IN FIND SIMULARY")
+    # logger.info("RUN IN FIND SIMULARY")
     context = get_context(document, query_text)
-    print("context: ", context)
+    # logger.info(f"context: {context}")
     return context
 
 
-print("~SUCCESS IN FIND SIMULARY")
+# logger.info("~SUCCESS IN FIND SIMULARY")
