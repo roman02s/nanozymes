@@ -4,6 +4,8 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 
+from src.logger import Logger
+
 from .pdf2text import PDF2text
 from src.embedder_e5 import (
     e5_get_embeddings,
@@ -14,24 +16,6 @@ from src.embedder_e5 import (
 )
 
 
-import logging
-logger = logging.getLogger('nanozymes_bot')
-logger.setLevel(logging.INFO)
-
-# Создаем обработчик для записи логов в файл
-file_handler = logging.FileHandler('logs/nanozymes_bot.log')
-file_handler.setLevel(logging.INFO)
-
-# Создаем форматтер для записи логов в удобочитаемом формате
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-file_handler.setFormatter(formatter)
-
-# Добавляем обработчик к логгеру
-logger.addHandler(file_handler)
-
-
-
-logger.info("SUCCESS IN GET CONTEXT")
 # Константы
 path_data = "data"
 embeddings_data = path_data + "/" + "embeddings"
@@ -75,7 +59,7 @@ def get_context(document: str, query_text: str):
     pdf2text = PDF2text([path_data + "/" + document])
     fixed_documents = pdf2text.build_index()
     all_texts = [item.page_content for item in fixed_documents]
-    logger.info(f"{len(all_texts)}, {len(all_texts)}, all texts and 20 first")
+    Logger.info(f"{len(all_texts)}, {len(all_texts)}, all texts and 20 first")
     # all_texts = all_texts[:20].copy()
     from tqdm import tqdm
     import gc
@@ -103,7 +87,7 @@ def get_context(document: str, query_text: str):
         size = combined_tensor.shape[0] #размер индекса
         index = faiss.IndexFlatL2(dim)
         index.add(combined_tensor.cpu().detach().numpy())
-        logger.info(f"In get_context: before write index: {dim=}, {size=}")
+        Logger.info(f"In get_context: before write index: {dim=}, {size=}")
         faiss.write_index(index, embeddings_data + "/" + f"index_{document}.index")
 
     result_sem = sem_search_faiss(
@@ -123,10 +107,7 @@ def get_context(document: str, query_text: str):
     result = np.array(list(result_set))
     result = np.sort(result)
     result = np.array([result])
-    logger.info(f"result: {type(result)} {result}")
+    Logger.info(f"result: {type(result)} {result}")
     # 2023-10-21 13:25:27,207 - nanozymes_bot - INFO - In get_context: result_sem[1]:<class 'numpy.ndarray'> [[  1 217  35   7 147]]
-    logger.info(f"return {np.array(all_texts)[result]}")
+    Logger.info(f"return {np.array(all_texts)[result]}")
     return np.array(all_texts)[result]
-
-
-logger.info("~SUCCESS IN GET CONTEXT")

@@ -17,22 +17,7 @@ from langchain.document_loaders import (
     UnstructuredWordDocumentLoader,
 )
 
-
-import logging
-logger = logging.getLogger('nanozymes_bot')
-logger.setLevel(logging.INFO)
-
-# Создаем обработчик для записи логов в файл
-file_handler = logging.FileHandler('logs/nanozymes_bot.log')
-file_handler.setLevel(logging.INFO)
-
-# Создаем форматтер для записи логов в удобочитаемом формате
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-file_handler.setFormatter(formatter)
-
-# Добавляем обработчик к логгеру
-logger.addHandler(file_handler)
-
+from src.logger import Logger
 
 def process_text(text):
     lines = text.split("\n")
@@ -67,7 +52,7 @@ class PDF2text:
         ext = "." + file_path.rsplit(".", 1)[-1]
         if ext not in self.LOADER_MAPPING:
             for ext in self.LOADER_MAPPING:
-                logger.info(file_path + ext)
+                Logger.info(file_path + ext)
                 if os.path.exists(file_path + ext):
                     file_path += ext
                     break
@@ -79,10 +64,10 @@ class PDF2text:
 
     def build_index(self):
         documents = [self.__load_single_document(path) for path in self.file_paths]
-        # logger.info(documents)
+        # Logger.info(documents)
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=self.chunk_size, chunk_overlap=self.chunk_overlap)
         documents = text_splitter.split_documents(documents)
-        # logger.info(documents)
+        # Logger.info(documents)
         self.fixed_documents = []
         for doc in documents:
             doc.page_content = process_text(doc.page_content)
@@ -90,7 +75,7 @@ class PDF2text:
                 continue
             self.fixed_documents.append(doc)
 
-        logger.info(f"Загружено {len(self.fixed_documents)} фрагментов! Можно задавать вопросы.")
+        Logger.info(f"Загружено {len(self.fixed_documents)} фрагментов! Можно задавать вопросы.")
         return self.fixed_documents
 
 # Пример использования PDF2text
