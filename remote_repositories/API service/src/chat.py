@@ -14,6 +14,7 @@ from langchain.document_loaders import PyPDFLoader
 from langchain.document_loaders import UnstructuredPDFLoader
 
 
+from src.logger import Logger
 
 print("SUCCESS IN CHAT")
 
@@ -60,6 +61,11 @@ class ChatGPT(BaseLLM):
         # vector_embeddings = embeddings['data']
 
         # print(vector_embeddings)
+        Logger.info((
+        f"{query=}\n\n"
+        f"{context=}\n\n"
+        f"{response=}"
+        ))
         return response
     
     def TEMPLATE(self, query, context, previous_questions):
