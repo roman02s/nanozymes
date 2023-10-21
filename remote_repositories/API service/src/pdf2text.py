@@ -17,6 +17,23 @@ from langchain.document_loaders import (
     UnstructuredWordDocumentLoader,
 )
 
+
+import logging
+logger = logging.getLogger('nanozymes_bot')
+logger.setLevel(logging.INFO)
+
+# Создаем обработчик для записи логов в файл
+file_handler = logging.FileHandler('logs/nanozymes_bot.log')
+file_handler.setLevel(logging.INFO)
+
+# Создаем форматтер для записи логов в удобочитаемом формате
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+
+# Добавляем обработчик к логгеру
+logger.addHandler(file_handler)
+
+
 def process_text(text):
     lines = text.split("\n")
     lines = [line for line in lines if len(line.strip()) > 2]
@@ -41,7 +58,7 @@ class PDF2text:
         # ".pptx": (UnstructuredPowerPointLoader, {}),
         # ".txt": (TextLoader, {"encoding": "utf8"}),
     }
-    def __init__(self, file_paths, chunk_size=200, chunk_overlap=10):
+    def __init__(self, file_paths, chunk_size=1200, chunk_overlap=0):
         self.file_paths = file_paths
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
@@ -50,7 +67,7 @@ class PDF2text:
         ext = "." + file_path.rsplit(".", 1)[-1]
         if ext not in self.LOADER_MAPPING:
             for ext in self.LOADER_MAPPING:
-                print(file_path + ext)
+                logger.info(file_path + ext)
                 if os.path.exists(file_path + ext):
                     file_path += ext
                     break
@@ -62,10 +79,10 @@ class PDF2text:
 
     def build_index(self):
         documents = [self.__load_single_document(path) for path in self.file_paths]
-        # print(documents)
+        # logger.info(documents)
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=self.chunk_size, chunk_overlap=self.chunk_overlap)
         documents = text_splitter.split_documents(documents)
-        # print(documents)
+        # logger.info(documents)
         self.fixed_documents = []
         for doc in documents:
             doc.page_content = process_text(doc.page_content)
@@ -73,7 +90,7 @@ class PDF2text:
                 continue
             self.fixed_documents.append(doc)
 
-        print(f"Загружено {len(self.fixed_documents)} фрагментов! Можно задавать вопросы.")
+        logger.info(f"Загружено {len(self.fixed_documents)} фрагментов! Можно задавать вопросы.")
         return self.fixed_documents
 
 # Пример использования PDF2text

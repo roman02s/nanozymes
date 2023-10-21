@@ -39,9 +39,15 @@ result:
 }
 ```
 ## Запуск
+Для отладки сервиса выполните следующие команды:
+1) `docker build -t api-service .`
+2) `docker run -it --rm -v "$(pwd):/app" -p 8000:8000 api-service bash`
+После выполнения команды (2) вы перейдете внутрь контейнера, `-v "$(pwd):/app"` позволяет редактировать файлы извне контейнера.
+
+
 Для запуска сервиса выполните следующие команды:
 1) `docker build -t api-service .`
-2) `docker run -it -v "$(pwd):/app" -p 8000:8000 api-service bash`
+2) `docker run -d -p 8000:8000 api-service`
 
 P.S.: `pyproject.toml` не использовать!
 

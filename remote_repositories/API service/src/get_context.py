@@ -12,11 +12,43 @@ from src.embedder_e5 import (
     tokenizer,
     device
 )
-print("SUCCESS IN GET CONTEXT")
+
+
+import logging
+logger = logging.getLogger('nanozymes_bot')
+logger.setLevel(logging.INFO)
+
+# Создаем обработчик для записи логов в файл
+file_handler = logging.FileHandler('logs/nanozymes_bot.log')
+file_handler.setLevel(logging.INFO)
+
+# Создаем форматтер для записи логов в удобочитаемом формате
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+
+# Добавляем обработчик к логгеру
+logger.addHandler(file_handler)
+
+
+
+logger.info("SUCCESS IN GET CONTEXT")
 # Константы
 path_data = "data"
 embeddings_data = path_data + "/" + "embeddings"
 
+def get_query_embedding(query_text): # query_text = "query: Какие основания для получения 33 услуги?"
+    query_batch_dict = tokenizer([query_text], max_length=512, padding=True, truncation=True, return_tensors='pt')
+    query_outputs = model(**query_batch_dict.to(device))
+    query_embedding = average_pool(query_outputs.last_hidden_state, query_batch_dict['attention_mask'])
+    query_embedding = F.normalize(query_embedding, p=2, dim=1)
+    return query_embedding.cpu().detach().numpy()
+
+# Создадим поиск с помощью FAISS
+def sem_search_faiss(query_text, index, top_k=5):
+    query = get_query_embedding(query_text)
+    D, I = index.search(query, top_k)
+    # resp = np.array(values)[I]
+    return D, I
 
 def get_context(document: str, query_text: str):
     """
@@ -43,65 +75,63 @@ def get_context(document: str, query_text: str):
     pdf2text = PDF2text([path_data + "/" + document])
     fixed_documents = pdf2text.build_index()
     all_texts = [item.page_content for item in fixed_documents]
-    texts = all_texts[:20].copy()
-    print(len(texts), len(all_texts), "all texts and 20 first")
-
+    logger.info(f"{len(all_texts)}, {len(all_texts)}, all texts and 20 first")
+    # all_texts = all_texts[:20].copy()
     from tqdm import tqdm
     import gc
 
     embds = []
-    if not os.path.exists(embeddings_data + "/" + f"embds_last_part_{document}.pt"):
-        for i, parag in tqdm(enumerate(texts), total=len(texts)):
+    # if not os.path.exists(embeddings_data + "/" + f"embds_last_part_{document}.pt"):
+    if os.path.exists(embeddings_data + "/" + f"index_{document}.index"):
+        index = faiss.read_index(embeddings_data + "/" + f"index_{document}.index")
+    else:
+        for i, parag in tqdm(enumerate(all_texts), total=len(all_texts)):
 
-            torch.cuda.empty_cache()
-            gc.collect()
+            with torch.no_grad():
+                torch.cuda.empty_cache()
+                gc.collect()
 
-            embd = e5_get_embeddings(f"passage: {parag}")
-            embds.append(embd.to('cpu'))
-            del embd
+                embd = e5_get_embeddings(f"passage: {parag}")
+                embds.append(embd.to('cpu'))
+                del embd
 
-            if len(embds) == 100:
+                gc.collect()
+                torch.cuda.empty_cache()
+        combined_tensor = torch.cat(embds, dim=0)
 
-                torch.save(embds, f"embds_{i+1 - 100}_{i+1}.pt")
-                embds = []
+        dim = combined_tensor.shape[1] #передаем размерность пр-ва
+        size = combined_tensor.shape[0] #размер индекса
+        index = faiss.IndexFlatL2(dim)
+        index.add(combined_tensor.cpu().detach().numpy())
+        logger.info(f"In get_context: before write index: {dim=}, {size=}")
+        faiss.write_index(index, embeddings_data + "/" + f"index_{document}.index")
 
-            if i + 1 == len(texts):
-                torch.save(embds, embeddings_data + "/" + f"embds_last_part_{document}.pt")
-
-
-    all_embds = torch.load(embeddings_data + "/" + f"embds_last_part_{document}.pt")
-    combined_tensor = torch.cat(all_embds, dim=0)
-
-    dim = combined_tensor.shape[1] #передаем размерность пр-ва
-    size = combined_tensor.shape[0] #размер индекса
-
-    index = faiss.IndexFlatL2(dim)
-    # print(index.ntotal)  # пока индекс пустой
-    index.add(combined_tensor.cpu().detach().numpy())
-    # print(index.ntotal)  # теперь в нем sentence_embeddings.shape[0] векторов
-
-
-    def get_query_embedding(query_text): # query_text = "query: Какие основания для получения 33 услуги?"
-        query_batch_dict = tokenizer([query_text], max_length=512, padding=True, truncation=True, return_tensors='pt')
-        query_outputs = model(**query_batch_dict.to(device))
-        query_embedding = average_pool(query_outputs.last_hidden_state, query_batch_dict['attention_mask'])
-        query_embedding = F.normalize(query_embedding, p=2, dim=1)
-        return query_embedding.cpu().detach().numpy()
-
-    # Создадим поиск с помощью FAISS
-    def sem_search_faiss(query_text, index, top_k=5):
-        query = get_query_embedding(query_text)
-        D, I = index.search(query, top_k)
-        # resp = np.array(values)[I]
-        return D, I
-    # тут используется query_text
     result_sem = sem_search_faiss(
         query_text=query_text,
         index=index,
-        #  values = np.array(parags),
-        top_k=10
+        top_k=5
     )
-    return np.array(texts)[result_sem[1]]
+    # [[  1 217  35   7 147]]
+    result_set = set()
+    for i in range(len(result_sem[1][0])):
+        _index = result_sem[1][0][i]
+        if _index == 0:
+            _index += 1
+        elif _index == len(all_texts)-1:
+            _index -= 1
+        
+        result_set.add(_index+1)
+    
+        result_set.add(_index-1)
+        result_set.add(_index)
+
+    result = np.array(list(result_set))
+    result = np.sort(result)
+    result = np.array([result])
+    logger.info(f"result: {type(result)} {result}")
+    # 2023-10-21 13:25:27,207 - nanozymes_bot - INFO - In get_context: result_sem[1]:<class 'numpy.ndarray'> [[  1 217  35   7 147]]
+    logger.info(f"return {np.array(all_texts)[result]}")
+    return np.array(all_texts)[result]
 
 
-print("~SUCCESS IN GET CONTEXT")
+logger.info("~SUCCESS IN GET CONTEXT")

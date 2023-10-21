@@ -4,27 +4,47 @@ from torch import Tensor
 from transformers import AutoTokenizer, AutoModel
 
 import pandas as pd
-print("SUCCESS IN EMBEDDER E5")
+
+import logging
+logger = logging.getLogger('nanozymes_bot')
+logger.setLevel(logging.INFO)
+
+# Создаем обработчик для записи логов в файл
+file_handler = logging.FileHandler('logs/nanozymes_bot.log')
+file_handler.setLevel(logging.INFO)
+
+# Создаем форматтер для записи логов в удобочитаемом формате
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+
+# Добавляем обработчик к логгеру
+logger.addHandler(file_handler)
+
+
+logger.info("SUCCESS IN EMBEDDER E5")
+
 def average_pool(last_hidden_states: Tensor,
                  attention_mask: Tensor) -> Tensor:
     last_hidden = last_hidden_states.masked_fill(~attention_mask[..., None].bool(), 0.0)
     return last_hidden.sum(dim=1) / attention_mask.sum(dim=1)[..., None]
 
-print("\tIN EMBEDDER E5: BEGIN LOAD TOKENIZER")
+logger.info("IN EMBEDDER E5: BEGIN LOAD TOKENIZER")
 tokenizer = AutoTokenizer.from_pretrained('intfloat/multilingual-e5-large')
-print("\tIN EMBEDDER E5: LOAD TOKENIZER")
-print("\tIN EMBEDDER E5: BEGIN LOAD MODEL")
+logger.info("IN EMBEDDER E5: LOAD TOKENIZER")
+logger.info("IN EMBEDDER E5: BEGIN LOAD MODEL")
 model = AutoModel.from_pretrained('intfloat/multilingual-e5-large')
-print("\tIN EMBEDDER E5: LOAD MODEL")
+logger.info("IN EMBEDDER E5: LOAD MODEL")
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model.to(device)
 
-def e5_get_embeddings(knowledge_texts): # каждый элемент обязательно начинаетмся с "passage:"
+def e5_get_embeddings(knowledge_texts):
+    logger.info("In e5_get_embeddings function")
+    # каждый элемент обязательно начинается с "passage:"
     passage_batch_dict = tokenizer(knowledge_texts, max_length=512, padding=True, truncation=True, return_tensors='pt')
     passage_outputs = model(**passage_batch_dict.to(device))
     passage_embeddings = average_pool(passage_outputs.last_hidden_state, passage_batch_dict['attention_mask'])
     passage_embeddings = F.normalize(passage_embeddings, p=2, dim=1)
     return passage_embeddings
 
-
-print("~SUCCESS IN EMBEDDER E5")
+logger.info("~SUCCESS IN EMBEDDER E5")
