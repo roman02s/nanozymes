@@ -19,7 +19,10 @@ from src.embedder_e5 import (
 # Константы
 path_data = "data"
 embeddings_data = path_data + "/" + "embeddings"
-
+if not os.path.exists(path_data):
+    os.mkdir(path_data)
+if not os.path.exists(embeddings_data):
+    os.mkdir(embeddings_data)
 def get_query_embedding(query_text): # query_text = "query: Какие основания для получения 33 услуги?"
     query_batch_dict = tokenizer([query_text], max_length=512, padding=True, truncation=True, return_tensors='pt')
     query_outputs = model(**query_batch_dict.to(device))
