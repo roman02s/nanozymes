@@ -7,7 +7,7 @@ from pydantic import BaseModel
 import uvicorn
 import json
 
-from src.find_simulary import find_simulary
+from src.find_similary import find_similary
 from src.chat import ChatGPT
 from src.find_params import SubstanceSizeExtractor
 from src.pdf2text import PDF2text
@@ -45,7 +45,7 @@ async def handler_nanozymes_bot(request: NanozymesBotRequest):
     # document = "C4RA15675G.pdf"
     # Logger.info(f"My document: {document}")
     # query_text = "query:  Fe3O4 NPs"
-    get_context_for_query = find_simulary(document, request.query_text)
+    get_context_for_query = find_similary(document, request.query_text)
     llm = ChatGPT()
     llm_response = llm(
         query=request.query_text,
@@ -59,7 +59,7 @@ async def handler_nanozymes_bot(request: NanozymesBotRequest):
     #     return {"answer": "Error, "+ str(document) + " " + str(e), "context": request.context}
 
 @app.post("/find_parameters", response_model=FindParametersResponse)
-async def handler_find_simulary(request: FindParametersRequest):
+async def handler_find_parameters(request: FindParametersRequest):
     Logger.info(f"/find_parameters::request : {request}")
     k_m = request.k_m
     v_max = request.v_max
