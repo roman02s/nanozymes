@@ -7,9 +7,6 @@ import logging
 Logger = logging.getLogger('auto_index')
 Logger.setLevel(logging.INFO)
 
-# Создаем обработчик для записи логов в файл
-with open("logs/auto_index.log", "w") as f:
-    pass
 
 file_handler = logging.FileHandler('logs/auto_index.log')
 file_handler.setLevel(logging.INFO)
@@ -35,10 +32,11 @@ Logger.info(f"Start with len(documents), documents: {len(documents)}, {documents
 i = 0
 for document in documents:
     i += 1
-    Logger.info(f"Success with document: {i}, document: {document}")
+    document = document.split(".pdf")[0]
+    Logger.info(f"Success run with document: {i}, document: {document}")
     try:
         res = get_context(document, "")
-        Logger.info(f"Success with document: {i}, document: {document}")
+        Logger.info(f"Success complete with document: {i}, document: {document}")
     except Exception as e:
         Logger.error(f"Error with document: {i}, document: {document}, error: {e}")
         continue
