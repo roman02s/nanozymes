@@ -7,7 +7,7 @@ from pydantic import BaseModel
 import uvicorn
 import json
 
-from src.find_similary import find_similary
+from src.find_similar import find_similar
 from src.chat import ChatGPT
 from src.find_params import SubstanceSizeExtractor
 from src.pdf2text import PDF2text
@@ -20,6 +20,7 @@ app = FastAPI()
 class NanozymesBotRequest(BaseModel):
     article: dict
     query_text: str
+    instruction: str
     context: str
 
 class NanozymesBotResponse(BaseModel):
@@ -37,26 +38,24 @@ class FindParametersResponse(BaseModel):
 @app.post("/nanozymes_bot", response_model=NanozymesBotResponse)
 async def handler_nanozymes_bot(request: NanozymesBotRequest):
     Logger.info(f"/nanozymes_bot::request : {request}")
-    # try:
-    link = request.article.get("link", None)
-    if link is None:
-        return {"answer": "No link", "context": request.context}
-    document = link.split("/")[-1]
-    # document = "C4RA15675G.pdf"
-    # Logger.info(f"My document: {document}")
-    # query_text = "query:  Fe3O4 NPs"
-    get_context_for_query = find_similary(document, request.query_text)
-    llm = ChatGPT()
-    llm_response = llm(
-        query=request.query_text,
-        previous_questions=request.context,
-        context=get_context_for_query[0])
-    new_context = request.context + "\n\n" + request.query_text + "\n\nresponse: " + llm_response + "\n\n"
-    return {"answer": llm_response, "context": new_context}
-    # except BaseException as e:
-    #     error_message = f"Error: {document} - {e}"
-    #     # Logger.error(error_message)
-    #     return {"answer": "Error, "+ str(document) + " " + str(e), "context": request.context}
+    try:
+        link = request.article.get("link", None)
+        if link is None:
+            return {"answer": "No link", "context": request.context}
+        document = link.split("/")[-1]
+        get_context_for_query = find_similar(document, request.query_text)
+        llm = ChatGPT()
+        llm_response = llm(
+            query=request.query_text,
+            instructions=request.instruction,
+            context=get_context_for_query[0],
+            previous_questions=request.context)
+        new_context = request.context + "\n\n" + request.query_text + "\n\nresponse: " + llm_response + "\n\n"
+        return {"answer": llm_response, "context": new_context}
+    except BaseException as e:
+        error_message = f"Error: {document} - {e}"
+        # Logger.error(error_message)
+        return {"answer": "Error, "+ str(document) + " " + str(e), "context": request.context}
 
 @app.post("/find_parameters", response_model=FindParametersResponse)
 async def handler_find_parameters(request: FindParametersRequest):
