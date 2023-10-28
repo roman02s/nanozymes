@@ -60,23 +60,26 @@ async def handler_nanozymes_bot(request: NanozymesBotRequest):
 @app.post("/find_parameters", response_model=FindParametersResponse)
 async def handler_find_parameters(request: FindParametersRequest):
     Logger.info(f"/find_parameters::request : {request}")
-    k_m = request.k_m
-    v_max = request.v_max
-    if k_m is None and v_max is None:
+    try:
+        k_m = request.k_m
+        v_max = request.v_max
+        if k_m is None and v_max is None:
+            return {"articles": {}}
+        articles: List[Dict[str, str]] = get_parameters(k_m, v_max)
+
+        result = {}
+        for id, article in enumerate(articles, start=1):
+            result[f"article_{id}"] = {}
+            for key, value in article.items():
+                result[f"article_{id}"][key] = str(value)
+
+        Logger.info(f"/find_parameters::result : {result}")
+        
+        return {"articles": result}
+    except BaseException as e:
+        error_message = f"Error: {e}"
+        # Logger.error(error_message)
         return {"articles": {}}
-    
-
-    articles: List[Dict[str, str]] = get_parameters(k_m, v_max)
-
-    result = {}
-    for id, article in enumerate(articles, start=1):
-        result[f"article_{id}"] = {}
-        for key, value in article.items():
-            result[f"article_{id}"][key] = str(value)
-
-    Logger.info(f"/find_parameters::result : {result}")
-    
-    return {"articles": result}
 
 
 if __name__ == "__main__":

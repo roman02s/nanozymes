@@ -74,7 +74,7 @@ class ChatGPT(BaseLLM):
         return response
     
     def TEMPLATE(self, query, instructions, context, previous_questions):
-        return f"""You are a chemistry expert. Please answer the question as accurately as possible, based on the information in the article. If you don't have an answer for a question, please say "I don't know".
+        return f"""Answer the question as truthfully as possible using the provided context, and if the answer is not contained within the text below, say "I don't know".
         \n\nQuestion: {str(query)}
         \n\nInstructions for answer: {str(instructions)}
         \n\nContext: {str(context)}
