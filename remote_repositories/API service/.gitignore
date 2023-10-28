@@ -2,3 +2,4 @@ data/embeddings
 .env
 data
 .venv
+indexes.zip
