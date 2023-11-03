@@ -3,6 +3,8 @@ from src.logger import Logger
 
 from fastapi import FastAPI
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
+
 
 import uvicorn
 import json
@@ -15,7 +17,13 @@ from src.get_parameters import get_parameters
 
 
 app = FastAPI()
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Установите "*" для разрешения доступа со всех источников
+    allow_credentials=True,
+    allow_methods=["*"],  # Разрешить все HTTP методы
+    allow_headers=["*"],  # Разрешить все заголовки
+)
 
 class NanozymesBotRequest(BaseModel):
     article: dict
