@@ -26,10 +26,10 @@ app.add_middleware(
 )
 
 class NanozymesBotRequest(BaseModel):
-    article: dict
     query_text: str
     instruction: str
     context: str
+    article: dict
 
 class NanozymesBotResponse(BaseModel):
     answer: str
@@ -43,6 +43,22 @@ class FindParametersResponse(BaseModel):
     articles: dict
 
 
+import httpx
+async def call_gpt_service(query, instructions, context, previous_questions):
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            "http://64.225.69.76:8000/gpt", # надо поправить
+            json={
+                "query": query,
+                "instructions": instructions,
+                "context": context,
+                "previous_questions": previous_questions,
+            },
+        )
+        response_data = response.json()
+        return response_data["llm_response"]
+    
+
 @app.post("/nanozymes_bot", response_model=NanozymesBotResponse)
 async def handler_nanozymes_bot(request: NanozymesBotRequest):
     Logger.info(f"/nanozymes_bot::request : {request}")
@@ -52,12 +68,21 @@ async def handler_nanozymes_bot(request: NanozymesBotRequest):
             return {"answer": "No link", "context": request.context}
         document = link.split("/")[-1]
         get_context_for_query = find_similar(document, request.query_text)
-        llm = ChatGPT()
-        llm_response = llm(
+        # llm = ChatGPT()
+        # llm_response = llm(
+        #     query=request.query_text,
+        #     instructions=request.instruction,
+        #     context=get_context_for_query[0],
+        #     previous_questions=request.context)
+        
+         # Отправляем запрос к микросервису GPT
+        llm_response = await call_gpt_service(
             query=request.query_text,
             instructions=request.instruction,
             context=get_context_for_query[0],
-            previous_questions=request.context)
+            previous_questions=request.context,
+        )
+        
         new_context = request.context + "\n\n" + request.query_text + "\n\nresponse: " + llm_response + "\n\n"
         return {"answer": llm_response, "context": new_context}
     except BaseException as e:
