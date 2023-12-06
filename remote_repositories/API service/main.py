@@ -47,7 +47,7 @@ import httpx
 async def call_gpt_service(query, instructions, context, previous_questions):
     async with httpx.AsyncClient() as client:
         response = await client.post(
-            "http://64.225.69.76:8000/gpt", # надо поправить
+            os.environ['REDIRECT_IP_HOST'],
             json={
                 "query": query,
                 "instructions": instructions,

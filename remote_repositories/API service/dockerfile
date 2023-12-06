@@ -24,7 +24,7 @@ WORKDIR /app
 # RUN poetry -v 
 # RUN poetry config virtualenvs.create false && poetry install --no-dev
 # ==================================================
-
+ENV REDIRECT_IP_HOST = "http://64.225.69.76:8000/gpt"
 # Установка зависимостей python
 COPY requirements.txt .
 RUN pip install -r requirements.txt && \
