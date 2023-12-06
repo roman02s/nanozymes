@@ -1,3 +1,4 @@
+import os
 from typing import List, Dict
 from src.logger import Logger
 
@@ -5,12 +6,11 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 
-
+import httpx
 import uvicorn
 import json
 
 from src.find_similar import find_similar
-from src.chat import ChatGPT
 from src.find_params import SubstanceSizeExtractor
 from src.pdf2text import PDF2text
 from src.get_parameters import get_parameters
@@ -43,21 +43,27 @@ class FindParametersResponse(BaseModel):
     articles: dict
 
 
-import httpx
-async def call_gpt_service(query, instructions, context, previous_questions):
-    async with httpx.AsyncClient() as client:
-        response = await client.post(
+def call_gpt_service(query, instructions, context, previous_questions):
+
+    request_data = {
+        "query": query,
+        "instructions": instructions,
+        "context": str(context.tolist()),
+        "previous_questions": previous_questions,
+    }
+
+    with httpx.Client() as client:
+        response = client.post(
             os.environ['REDIRECT_IP_HOST'],
-            json={
-                "query": query,
-                "instructions": instructions,
-                "context": context,
-                "previous_questions": previous_questions,
-            },
+            json=request_data,
         )
-        response_data = response.json()
-        return response_data["llm_response"]
-    
+
+        if response.status_code == 200:
+            response_data = response.json()
+            return response_data["llm_response"]
+        
+        response.raise_for_status()
+        
 
 @app.post("/nanozymes_bot", response_model=NanozymesBotResponse)
 async def handler_nanozymes_bot(request: NanozymesBotRequest):
@@ -68,15 +74,9 @@ async def handler_nanozymes_bot(request: NanozymesBotRequest):
             return {"answer": "No link", "context": request.context}
         document = link.split("/")[-1]
         get_context_for_query = find_similar(document, request.query_text)
-        # llm = ChatGPT()
-        # llm_response = llm(
-        #     query=request.query_text,
-        #     instructions=request.instruction,
-        #     context=get_context_for_query[0],
-        #     previous_questions=request.context)
         
          # Отправляем запрос к микросервису GPT
-        llm_response = await call_gpt_service(
+        llm_response = call_gpt_service(
             query=request.query_text,
             instructions=request.instruction,
             context=get_context_for_query[0],
