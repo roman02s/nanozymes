@@ -1,5 +1,5 @@
 # ML System Design Doc - [RU]
-[ML System Design Doc в Google Doc](https://docs.google.com/document/d/1CI9ggCAFSKsd5e3XjWmvZ4EXBDerGNPkh2qS21IPdIg/edit?usp=sharing)
+[ML System Design Doc в Google Doc](https://docs.google.com/document/d/1urMqt1uKdixaWHgscUZvZBr0raErmfPW4mYrT1vO668/edit?usp=sharing)
 ## Дизайн ML системы - nanozymes_ai (MVP). вер.1.4 </h1>
 
 Текущий этап разработки системы машинного обучения заключается в запуске сервиса в производственную среду. Разработка моделей для создания эмбеддингов успешно завершена, и их оптимизация проведена. Архитектура решения полностью спроектирована. Бизнес-требования к проекту четко сформулированы, а проблемное интервью с заинтересованными сторонами успешно проведено.
@@ -17,7 +17,7 @@
 #### 1.2. Бизнес-требования и ограничения
 - Краткое описание БТ и ссылки на детальные документы с бизнес-требованиями `Product Owner` 
 
-[Детальные бизнес-требования](https://docs.google.com/document/d/1wzRkxla2tKxWpdSKJyNufT7vK5zfY5HU0-tbEOxiyjY/edit?usp=sharing) 
+[Детальные бизнес-требования](https://docs.google.com/document/d/1SAHsls4iGnLmjYxRgtPlKIL3_irEMXqiSGEQzT3TROM/edit?usp=sharing) 
 
 Создаем сервис, позволяющий в научных статьях выделять данные, отвечающие на вопрос пользователя. Например, сервис должен найти в тексте статьи инструкцию по синтезу химического вещества, информацию о каталитической активности и т.п.
 
@@ -127,7 +127,7 @@
 
 
 - Для тестирования использована выборка 10 случайных статей
-- Демо заказчику, тестирование согласно сценариям, описанным в [бизнес-требованиях](https://docs.google.com/document/d/1wzRkxla2tKxWpdSKJyNufT7vK5zfY5HU0-tbEOxiyjY/edit?usp=sharing) финальное определение параметров модели по результатам тестирования
+- Демо заказчику, тестирование согласно сценариям, описанным в [бизнес-требованиях](https://docs.google.com/document/d/1SAHsls4iGnLmjYxRgtPlKIL3_irEMXqiSGEQzT3TROM/edit?usp=sharing) финальное определение параметров модели по результатам тестирования
  - Внедрение финальных значений параметров N, k, q в работу модели
 - Внедрение моделей в промышленный контур - после настройки выделенного сервера с VPN - для отправки запроса модели OpenAI
 
@@ -136,7 +136,7 @@
   
 #### 3.1. Способ оценки пилота  
 - Краткое описание предполагаемого дизайна и способа оценки пилота Product Owner, Data Scientist with AB Group
-  Порядок тестирования, критерии (метрики) успешности описаны в [бизнес-требованиях](https://docs.google.com/document/d/1wzRkxla2tKxWpdSKJyNufT7vK5zfY5HU0-tbEOxiyjY/edit?usp=sharing)
+  Порядок тестирования, критерии (метрики) успешности описаны в [бизнес-требованиях](https://docs.google.com/document/d/1SAHsls4iGnLmjYxRgtPlKIL3_irEMXqiSGEQzT3TROM/edit?usp=sharing)
 
 #### 3.3. Подготовка пилота  
 
